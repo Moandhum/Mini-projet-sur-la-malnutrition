@@ -1,0 +1,1397 @@
+---
+title: "projet donné cat"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+date: "2023-11-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Lecture de la Table:
+
+```{r lecture table}
+library(dplyr)
+library(tidyverse)
+library(haven)
+
+
+menage <- read_sas("GHHR72FL.SAS7BDAT")
+
+
+```
+
+
+Quelques variables intéressantes pour notre études:
+
+
+- Anemia (HA57)
+- Mother's highest educational (HC61)
+- Food cooked in house (HV241)
+- Type of cooking (HV226)
+- Region (HV024)
+- Number of children 5 and under (HV014)
+- Type of place of residence (HV025)
+- Source of drinking water (HV201)
+- Cihld's age in months (HC1)
+
+
+
+## Selection des enfants
+
+ Pour pouvoir répondre à notre problèmatique, il nous a fallu la transformer la table d'origine.
+En effet, les lignes de la table d'orignine correspondaient aux  menages, or notre étude est basée sur les enfants. Pour se faire, nous avons créer un nouveau tableau nommé enfant, dont chaque ligne correspond à un enfant. Dans ce nouveau tableau, chaque enfant a sa prpopre valeur pour des variables individuelles à l'exemple du niveau d'anemie, le niveau maximal d'étude atteint par la mère, l'age de l'enfants et  bien d'autre variable communes avec les enfants de même menage. 
+
+Dans un premier temps nous avons savoir combien d'enfant de moins de 5 ans on a dans la table menage . Pourcelà on a decider de regarder la variable HC1 (âge des enfants) composé de 7 colonnes (Hc1_1,..HC1_7). Avec le code ci-dessus, on remarque l'âge minimum est de 0 mois et l'âge maximum est 59 mois (5 ans ) et que la colonnes HC1_7 est vide.
+
+#resumé des colonnes HC1
+
+```{r res colonnes HC1 }
+summary(select(menage,HC1_1:HC1_7))
+```
+
+
+Pour compter le nombre d'enfant, on a compté le nombre de lignes  qui contiennent des valeurs pour les 6 colonnes HC1_1, jusqu'à HC1_6. Au total on a trouvé 3238.
+
+
+#nombre des enfants
+```{r nbr enfant}
+
+data1 <- menage %>%
+        filter(!is.na(HC1_1))
+data2<- menage %>%
+        filter(!is.na(HC1_2))
+data3<- menage %>%
+        filter(!is.na(HC1_3))
+data4<- menage %>%
+        filter(!is.na(HC1_4))
+data5<- menage %>%
+        filter(!is.na(HC1_5))
+data6<- menage %>%
+        filter(!is.na(HC1_6))
+data7<- menage %>%
+        filter(!is.na(HC1_7))
+nbrenf <- nrow(rbind(data1,data2,data3,data4,data4,data5,data6,data7))
+nbrenf
+
+```
+
+Après observation, nous avons remarquer que la variable que nous avons décidé d'examiner, HA57 (Anémie des enfants), possède 6 colonnes dans notre tableau, à savoir H157_1, HA57_2, jusqu'à HA57_7. En d'autres termes, nous avons au maximum 7 enfants par ménage, et les colonnes mentionnées précédemment correspondent respectivement au premier, deuxième jusqu'au septième enfant. Notre objectif est d'obtenir le niveau d'anémie pour chaque enfant de moins de 5 ans.
+
+Pour sélectionner les premiers enfants de chaque ménage, nous avons conservé les lignes de la table ménage qui n'ont pas de valeurs manquantes (NA) pour la variable HA57_1. Il est important de noter que les lignes contenant des valeurs manquantes (222 lignes) correspondent aux ménages qui n'ont pas d'enfant de moins de 5 ans ou dont le niveau d'anémie de cet enfant est inconnu.
+
+Ensuite, pour la variable HC61 (Niveau d'étude de la mère), qui est composée de 7 colonnes également, nous avons appliqué la même procédure que celle utilisée pour HA57_1, mais cette fois-ci avec HC61_1.
+
+Pour trouver les autres enfants, nous avons effectué de manière successive les opérations précédentes pour les variables HA57 (Anémie) et HC61 (niveau d'étude de la mère) qui correspondent aux enfants supplémentaires.
+
+Au final, nous avons identifié 2175 enfants pour lesquels nous disposons à la fois du niveau d'anémie et du niveau d'éducation de la mère. Les autres variables, telles que l'indice de richesse, la région et l'électricité, sont des variables partagées par tous les membres du ménage et ne présentent pas de valeurs manquantes (NA) pour les individus de notre population. Par conséquent, aucune étape de prétraitement n'est nécessaire pour ces variables.
+```{r}
+summary(data1$HA57_1)
+summary(data2$HC61_1)
+```
+
+#Selection des enfants
+```{r selection enfant}
+# les premiers enfants
+
+enf1 <- filter(menage, !is.na(HA57_1))
+
+enf1<- filter(enf1, !is.na(HC61_1))
+
+enf1$HA57 = enf1$HA57_1
+enf1$HC61=enf1$HC61_1
+
+enf1 <-filter(enf1,HC1_1<=60)
+
+enf1$HC1=enf1$HC1_1
+
+enf1$HC27=enf1$HC27_1
+
+
+
+###############################################################################################
+# les deuxièmes enfants
+enf2 <- enf1 %>% 
+  filter(!is.na(HA57_2), !is.na(HC61_2))
+
+enf2$HA57= enf2$HA57_2
+enf2$HC61 <-enf2$HC61_2
+
+enf2 <-filter(enf2,HC1_2<=60)
+enf2$HC1=enf2$HC1_2
+
+enf2$HC27=enf2$HC27_2
+
+#########################################################################################
+# Les  troisièmes enfants
+
+enf3 <- enf2 %>% 
+  filter(!is.na(HA57_3), !is.na(HC61_3))
+
+
+  
+enf3$HA57 = enf3$HA57_3
+enf3$HC61 = enf3$HC61_3
+
+enf3 <-filter(enf3,HC1_3<=60)
+enf3$HC1=enf3$HC1_3
+
+enf3$HC27=enf3$HC27_3
+
+
+############################################################################################
+# Les quatrièmes enfants
+
+
+enf4 <- enf3 %>% 
+  filter(!is.na(HA57_4), !is.na(HC61_4))
+
+enf4$HA57 = enf4$HA57_4
+enf4$HC61 = enf4$HC61_4
+
+enf4 <-filter(enf4,HC1_4<=60)
+enf4$HC1=enf4$HC1_4  
+
+enf4$HC27=enf4$HC27_4
+
+# combinaisons des 4 tableaux
+enfant <-rbind(enf1,enf2,enf3,enf4)
+
+enf<-select (enfant,HA57,HC61,HV270,HV024,HC1,HC27,HV025,HHID, HV005, HV009, HV012, HV013, HV014, HV024, HV025, HV201, HV270,HV204:HV228, HV243A, SH110L, SH110P, SH110Q, SH110R, SH110S)
+
+
+#colnames(enf) <- c("HA57","HC61","HV270","HV024","HC1","HC27","HV025","HHID", "HV005", "HV009", "HV012", #"HV013", "HV014", "HV024", "HV025", "HV201", "HV270","HV204", "HV205", "HV206", "HV207", "HV208", "HV209", #"HV210", "HV211", "HV212", "HV213", "HV214", "HV215", "HV216", "HV217", "HV218", "HV219", "HV220", "HV221", #"HV222", "HV223", "HV224", "HV225", "HV226", "HV227", "HV228", "HV243A", "SH110L", "SH110P", "SH110Q", #"SH110R", "SH110S")
+
+```
+
+#table rds
+```{r table rds}
+
+# Sauvegarde de la table en format rds 
+tabenf <- as.data.frame(enf)
+
+saveRDS(tabenf,file = "tab enf.rds")
+
+
+##############################################################################"
+###########################
+
+library(questionr) 
+dataDOC = describe(enf) 
+write(dataDOC, "dataDOC.txt")
+
+```
+
+# Conversion des variables:
+
+```{r Conversion des variables}
+
+enf$cHA57 <- as.factor(enf$HA57)
+enf$cHC27 <- as.factor(enf$HC27)
+enf$cHC61 <- as.factor(enf$HC61)
+enf$cHVO24 <- as.factor(enf$HV024)
+enf$cHV270 <- as.factor(enf$HV270)
+enf$cHV025 <- as.factor(enf$HV025)
+enf$cHV024 <- as.factor(enf$HV024)
+
+enf$cHV201 <- as.factor(enf$HV201)
+enf$cHV204 <- as.factor(enf$HV204)
+enf$cHV205 <- as.factor(enf$HV205)
+enf$cHV206 <- as.factor(enf$HV206)
+enf$cHV207 <- as.factor(enf$HV207)
+enf$cHV208 <- as.factor(enf$HV208)
+enf$cHV209 <- as.factor(enf$HV209)
+enf$cHV210 <- as.factor(enf$HV210)
+enf$cHV211 <- as.factor(enf$HV211)
+enf$cHV212 <- as.factor(enf$HV212)
+enf$cHV213 <- as.factor(enf$HV213)
+enf$cHV214 <- as.factor(enf$HV214)
+enf$cHV215 <- as.factor(enf$HV215)
+enf$cHV216 <- as.factor(enf$HV216)
+enf$cHV217 <- as.factor(enf$HV217)
+enf$cHV218 <- as.factor(enf$HV218)
+enf$cHV219 <- as.factor(enf$HV219)
+enf$cHV220 <- as.factor(enf$HV220)
+enf$cHV221 <- as.factor(enf$HV221)
+enf$cHV225 <- as.factor(enf$HV225)
+enf$cHV226 <- as.factor(enf$HV226)
+enf$cHV227 <- as.factor(enf$HV227)
+enf$cHV228 <- as.factor(enf$HV228)
+
+enf$cHV243A <- as.factor(enf$HV243A)
+enf$cHV270 <- as.factor(enf$HV270)
+enf$cSH110L <- as.factor(enf$SH110L)
+enf$cSH110P <- as.factor(enf$SH110P)
+enf$cSH110Q <- as.factor(enf$SH110Q)
+enf$cSH110R <- as.factor(enf$SH110R)
+enf$cSH110S <- as.factor(enf$SH110S)
+
+```
+
+# Analyse  Statistique:
+
+## Etude univariée 
+Il s'agit d'une étape cruciale en analyse statistique. Cette étape va servir d'une base solide pour faire des analyses statistiques plus avancées et à tirer des conclusions plus informées dans le cadre de notre travail.
+
+Nous allons réaliser le tris à plat des variables pertinentes pour notre étude.
+
+- Âge des enfants en mois (HC1)
+- Niveau d'étude de la mère (HC61)
+- Présence de moustiquaire autour des lits (HV227)
+- Region (HV024)
+- milieu du résidence (rural ou urbain) (HV025)
+- Source de l'eau (HV201)
+- Electricité
+- Source de richesse
+- Anémie (HA57)
+
+###  Etude de la variable âge des enfants moins de 5 ans en mois (HC1):
+
+Dans un premier temps nous avons décidé de regarder la distribution de l'âge de notre population à savoir les enfants de moins de 5 ans. Cette variable permettra de savoir quelle tranche d'âge est la plus touchée par l'anemie.
+
+Pour cela, nous avons tracer le boxplot et l'histogramme de cette variable qui sont presentés dans les figures ci-dessous. 
+
+
+```{r age HC1}
+
+library(ggplot2)
+
+
+ggplot(enf, aes(x=HC1))+geom_boxplot(color="salmon")+labs(x="Âges des enfants")
+
+hist(enf$HC1,xlab= "Âge des enfants",main="", col='salmon')
+
+```
+D'après l'histogramme, l'âge des enfants de moins de 5 ans est bien repartie, pour chaque tranche d'âge , on a presque le même nombre d'enfants. Cette variable est uniformement distribuée. 
+Une telle distribution va jouer un rôle sur les intérpretations dans notre étude car les résultats sur l'anémie des enfants ne sera pas restrictif pour une tranche d'âge spécifique.
+
+D'après le boxplot, nous remarquons qu'il y'a une symetrie dans la distribution de l'âge des enfants.
+Ce qui signifie que le nombre des valeurs inférieures et supérieures à la mediane (32 mois) est à peu près égale. Nous remarquons également l'absence des valeurs abérrantes en dehors des moustaches ce qui confirme la bonne distribution des données.
+
+### Etude de la variable Avoir une moustiquaire (HV227):
+
+L'utilisation de moustiquaires est souvent associée à la prévention des maladies transmises par les moustiques, notamment le paludisme. Dans le contexte de l'étude de l'anémie chez les enfants, la variable "moustiquaire" peut être importante car les moustiques infectieuses peuvent causer ou aggraver l'anémie chez l'enfant.
+
+
+```{r moustiquaire HV227}
+library(labelled)
+library(openxlsx)
+# création de label pour la avriable Anémie
+attr(enf$HA57, "label") <- "Anémie"
+
+#  effectifs
+var_mousti <- enf %>% group_by(cHV227)%>% 
+               summarize( effectifs=n())
+var_mousti$eff_cum <-cumsum(var_mousti$effectifs)
+
+# Fréquences
+var_mousti$pourcent <-round(prop.table(var_mousti$effectifs)*100,2)
+var_mousti$pour_cum <- cumsum(var_mousti$pourcent)
+
+#Modalités
+mousti <- c("Non","Oui") 
+var_mousti$moustiquaire <- mousti
+
+# Noms des colonnes
+colnames(var_mousti)<-c("Moustiquaire", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","presence")
+
+#Exportation de la table
+write.xlsx(var_mousti,file="var_mousti.xlsx")
+
+#Affichage du tableau des statistiques de la variable
+var_mousti
+
+# Histogramme
+ggplot(var_mousti,aes(x=Moustiquaire,y=effectifs ,fill=presence))+ geom_bar(stat = "identity")+ 
+  labs(x="Possession de moustiquaire", y="effectifs")+ geom_text(label= mousti)
+
+
+```
+
+
+
+ 
+L'histogramme ci-dessus, montre que environ 80% des menages où il y'a des enfants de moins de 5 ans possèdent des moustiquaires autour des lits.Dans notre étude, nous avons l'intution que les enfants qui sont dans des menages qui n'ont pas de moustiquaires autour des lits sont susceptibles d'être plus affectés par l'anemie.
+
+
+
+
+### Etude de la variable Niveau d'éducation de la mère (HC61)
+Cette variable semble être très importante dans notre étude. En effet, nous pensons qu'une mère avec un niveau d'éducation élévé est plus informée sur les risques des maladies de son enfant et donc veillera à sa santé et à bien le nourir.
+
+
+#Niveau d'étude de la mère HC61
+```{r niv mere}
+
+# Effectifs
+var_etud <- enf %>% group_by(cHC61)%>% 
+               summarize( effectifs=n())
+var_etud$eff_cum <-cumsum(var_etud$effectifs)
+
+# Fréquences
+var_etud$pourcent <-round(prop.table(var_etud$effectifs)*100,2)
+var_etud$pour_cum <- cumsum(var_etud$pourcent)
+
+# Modalités
+etude <- c("Pas d'education", "Primaire", " Sécondaire", "Lycée") 
+var_etud$etude <- etude
+ 
+# Noms des colonnes
+colnames(var_etud)<-c("Niv_Ed_M", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","niveaux")
+
+
+
+#Affichage du tableau des statistiques de la variable
+var_etud
+
+# Exportation de la table
+write.xlsx(var_etud,file="var_etud.xlsx")
+
+# Diagramme
+ggplot(var_etud,aes(x=Niv_Ed_M,y= effectifs ,fill=niveaux))+ geom_bar(stat = "identity")+ 
+  labs(x="Niveau d'étude de la mère", y="effectifs")+ geom_text(label= etude)
+var_etud
+
+#prop.test(table(menage$cHC226),conf.level = 0.95)
+```
+En examinant l'histogramme, il est notable que 35% des enfants ont des mères non scolarisées. Par conséquent, la majorité des enfants (65%) ont des mères ayant fait des études.
+
+Plus précisément, les données indiquent que :
+- 20 % des enfants ont des mères ayant atteint au maximum le niveau primaire,
+- 41 % des enfants ont des mères ayant atteint le niveau secondaire,
+- et seulement 3,5 % des enfants ont des mères possédant un niveau d'études lycée.
+
+
+### Etude de la variable Sexe de l'enfant (HC27):
+Nous avons décidé d'explorer l'impact de l'anémie sur les enfants, en particulier en examinant si cette condition affecte différemment les deux sexes, à savoir les garçons et les filles.
+L'étude de cette variable nous aidera à déterminer si l'anémie peut être considérée comme étant plus restrictivement liée à l'un des sexes par rapport à l'autre au sein de la population étudiée.
+
+#sexe de l'enfant HC27 
+```{r sexe d enfant}
+
+# regroupement et calcul de l'effectif par modalité
+var_sex <- enf %>% group_by(cHC27)%>% 
+               summarize( effectifs=n())
+var_sex$eff_cum <-cumsum(var_sex$effectifs)
+
+# Fréquences      
+var_sex$pourcent <- round(prop.table(var_sex$effectifs)*100,2)
+var_sex$pour_cum <- cumsum(var_sex$pourcent)
+
+# Modalités
+sexe <- c("garçon", "fille")
+var_sex$sexe=sexe
+
+# Noms des colonnes
+colnames(var_sex)<-c(" Sexe de l'enfant", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","Sexe")
+
+#Exportation de la table
+write.xlsx(var_sex,file="var_sex.xlsx")
+
+#Affichage du tableau des statistiques de la variable
+var_sex
+
+# Diagramme circulaire
+ggplot(var_sex, aes(x = " Sexe de l'enfant", y = fréquences, fill = sexe)) +
+  geom_bar(width = 1, stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  labs(y="effectifs", colour="sexe") +
+  geom_text(aes(x = c(1,0.5), y=c(20,0.02),label = paste0(fréquences,"%")),size =5,hjust=1)
+ 
+
+
+```
+
+
+On remarque à partir du diagramme circulaire que les pourcentages des garçons (52%) et de filles (48%) sont presques les mêmes. On a donc un équilibre de sexe dans notre échantillon ce ce qui peut contribuer à minimiser les biais liés au sexe dans l'analyse . Cela permettra de déterminer s'il existe des différences significatives dans la prévalence de l'anémie entre les deux sexes.
+
+
+Nous allons réaliser un test d'hypothèses pour savoir si la proportion des garçons dans notre population est de 50%. 
+-Hypothèse nulle (H0): La probabilité réelle (p) d'obtenir un garçon est égale à 0,5.
+-Hypothèse alternative (H1): La probabilité réelle (p) d'obtenir un garçon n'est pas égale à 0,5.
+
+```{r}
+# prop.test
+(taille_ech <- nrow(enf))
+(nbr_garçon <-nrow(filter(enf,cHC27==1)))
+
+res_test <- prop.test(nbr_garçon,taille_ech,0.5)
+res_test
+```
+ Le test ci-dessus, nous donne une p-valeur de 15%. Puisque le p-value est supérieur au seuil de significativité courant de 0,05, on ne rejette pas l'hypothèse nulle. Cependant, on ne peut pas conclure que la probabilité d'obtenir un garçon est exactement de 0,5.
+ L'intervalle de confiance à 95% pour la vraie probabilité (p) d'obtenir un garçon est de 0,494 à 0,537. Cela signifie qu'avec une confiance de 95%, on estime que la proportion réelle de garçons se situe entre ces deux valeurs. La probabilité 0,5 est incluse dans cet intervalle, ce qui est cohérent avec le p-value plus élevé, suggérant que la probabilité réelle pourrait être égale à 0,5. Cependant, il n'y a pas suffisamment de preuves pour rejeter l'hypothèse nulle. Les données ne fournissent pas une base solide pour affirmer que la probabilité d'obtenir un garçon est significativement différente de 0,5.
+
+
+## Etude de la variable Milieu du menage:
+On a jugé necessaire de regarder cette variable car l'impact de l'anémie chez les enfants de moins de 5 ans peut avoir un lien avec le milieux. En effet, la malnutrition peut être liées aux disparités socio-économiques entre les milieux urbains et ruraux, les différences d'accès aux soins de santé, à la diversité alimentaire et l'exposition aux risques environnementaux.  
+
+
+```{r zone rurale ou urbaine H025}
+# regroupement et calcul de l'effectif par modalité
+var_zone <- enf %>% group_by(cHV025)%>% 
+               summarize( effectifs=n())
+var_zone$eff_cum <-cumsum(var_zone$effectifs)
+
+# Fréquences      
+var_zone$pourcent<-round(prop.table(var_zone$effectifs)*100,2)
+var_zone$pour_cum <- cumsum(var_zone$pourcent)
+
+
+# Noms des modalités
+zone= c("urbaine", "rurale")
+var_zone$zone=zone
+
+# Noms des colonnes
+colnames(var_zone)<-c("Milieu du ménage", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","zone")
+
+# Exportation de la table
+write.xlsx(var_zone,file="var_zone.xlsx")
+
+#Affichage du tableau des statistiques de la variable
+var_zone
+
+# diagramme circulaire
+
+ggplot(var_zone, aes(x = "Milieu du ménage", y = fréquences, fill = zone)) +
+  geom_bar(width = 1, stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  labs(y="effectifs", colour="zone") +
+  geom_text(aes(x= c(1.2,1.5),label = paste0(fréquences,"%"), vjust=-4),size = 5)
+
+
+```
+D'après le tableau et le diagramme ci-dessus, on remarque que  1286 enfants moins de 5 ans  habitent dans des zones rurales, ce qui représente 59% de l'ensemble des enfants considérés dans l'étude. Et les 41% des enfants sont en zone urbaine.
+
+
+## Etude de la variable Région de résidence :
+
+L'étude de la variable région au lieu de se limiter aux zones urbaines et rurales offre une vision plus détaillée des disparités géographiques dans la prévalence de l'anémie chez les enfants de moins de 5 ans et permet aussi de contextualiser les facteurs de risque spécifiques à chaque région. 
+
+```{r region}
+# regroupement et calcul de l'effectif par modalité
+var_region <- enf %>% group_by(cHV024)%>% 
+               summarize( effectifs=n())
+var_region$eff_cum <-cumsum(var_region$effectifs)
+
+# Fréquences     
+var_region$pourcent<-round(prop.table(var_region$effectifs)*100,2)
+var_region$pour_cum <- cumsum(var_region$pourcent)
+
+# Noms des modalités
+ region= c("Western","Central","Greater Accra ", "Volta ","Eastern ","Ashanti ","Brong Ahafo","Northern","Upper East","Upper West")
+var_region$region <-region
+
+# Noms des colonnes
+colnames(var_region)<-c("Region", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","Nom region")
+
+# Exportation de la table
+write.xlsx(var_region,file="var_region.xlsx")
+
+#Affichage du tableau des statistiques de la variable
+var_region
+
+# diagramme
+HV024  = freq(enf$HV024,val = FALSE, cum = TRUE)
+pie(HV024$`%`, labels = HV024$`%`, col = c("purple", "violetred1", "green3",
+                       "cornsilk", "cyan", "blue","salmon","yellow","red","grey") )
+                   
+legend("left", title = "Région" , title.adj = 0.5, inset = 0,
+      xpd = TRUE, legend =region,
+      fill = c("purple", "violetred1", "green3",
+                       "cornsilk", "cyan", "blue","salmon","yellow","red","grey"))
+```
+
+ Après observation du tableau et du diagramme ci-dessus, nous remarquons qu'il y a une repartition presque égale du nombre d'enfants sur les différents régions à part la région Northem qui cotinent le plus d'enfants (15%). La région qui a le moins d'enfants est la région de Volta avec un nombre de 163 soit 7%. Les autres régions ont un pourcentage de nombre d'enfants compris entre 8 et 11%.
+ 
+
+### Etude de la variable Source d'eau (HV201):
+Les différentes sources sont:
+"Canalisée dans le logementCanalisée dans la cour/parcelle", 
+"Robinet public/fontaine",
+"Puits tubulaire ou forage",
+"Puits protégé",
+"Puits non protégé",
+"Source protégée",
+"Source non protégée",
+"Rivière/barrage/lac/étang/cours d'eau/canal/chenal d'irrigation Eau de pluie",
+"Camion-citerne",
+"Eau en bouteille",
+"Eau en sachet")
+
+Dans un contexte de nutrition et de santé,l'eau potable est une variable logique à étudier. Les contaminants présents dans l'eau, tels que les agents pathogènes ou les substances chimiques, peuvent avoir des implications directes sur la santé et contribuer à l'anémie.
+  
+#Source d'eau HV201 avant regroupement
+```{r source eau av reg}
+
+# regroupement et calcul de l'effectif par modalité
+var_source1 <- enf %>% group_by(cHV201)%>% 
+               summarize( effectifs=n())
+
+var_source1$eff_cum <-cumsum(var_source1$effectifs)
+
+
+# Fréquences      
+var_source1$pourcent <-round(prop.table(var_source1$effectifs)*100,2)
+var_source1$pour_cum <- cumsum(var_source1$pourcent)
+
+# Modalités
+source <- c(
+  "Canalisée dans le logement",
+  "Canalisée dans la cour/parcelle", 
+"Robinet public/fontaine",
+"Puits tubulaire ou forage",
+"Puits protégé",
+"Puits non protégé",
+"Source protégée",
+"Source non protégée",
+"Rivière/barrage/lac/étang/cours d'eau",
+"Eau de pluie",
+"Camion-citerne",
+"Eau en bouteille",
+"Eau en sachet") 
+
+var_source1$source <- source
+
+# Noms des colonnes
+colnames(var_source1)<-c("Source", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","source")
+
+# Exportation de la table
+write.xlsx(var_source1,file="var_source1.xlsx")
+
+#Affichage du tableau des statistiques de la variable
+var_source1
+
+# Diagramme
+ggplot(var_source1,aes(x=Source, y=effectifs, fill=source))+ geom_bar(stat = "identity")+ 
+   labs(x="Source d'eau ", y="effectifs")
+
+```
+
+D'après les données du tableau et du diagramme, il est possible de constater que l'eau potable est principalement prélevée à partir de puits ou de forages. En effet, 36,14 % des enfants appartiennent à des ménages interrogés qui tirent leur eau de ces sources. De plus, 20 % des enfants ont comme principale source d'eau les robinets publics et les fontaines, tandis que 10 % proviennent de ménages où l'eau potable est issue de rivières, lacs ou canaux. Seuls 7 % des enfants consomment de l'eau provenant d'une source ou d'un puit protégé.
+
+Ainsi, on peut dire que la majorité de l'eau potable des ménages est issue de sources "naturelles" et nécessite d'être prélevée directement à la source. Cette situation indique un faible niveau d'hygiène de l'eau pour notre population, ce qui pourrait avoir des conséquences sur la santé.
+
+Par la suite , lors du tris croisés et de l'ACM, nous allons utiliser le regroupement ci-dessus pour faciliter les intérpretations.
+```{r Source deau HV201}
+
+# Regroupement des modalités
+enf$source <- vector("character", length = nrow(enf))
+
+enf$source[enf$cHV201==11]="Source canalisée"
+enf$source[enf$cHV201==12]="Source canalisée"
+enf$source[enf$cHV201==13]="Source canalisée"
+enf$source[enf$cHV201==21]="Source protégée"
+enf$source[enf$cHV201==31]="Source protégée"
+enf$source[enf$cHV201==32]="Source non protégée"
+enf$source[enf$cHV201==41]="Source protégée"
+enf$source[enf$cHV201==42]="Source non protégée"
+enf$source[enf$cHV201==43]="Source non protégée"
+enf$source[enf$cHV201==51]="Source non protégée"
+enf$source[enf$cHV201==61]="Eau en reservoir"
+enf$source[enf$cHV201==71]="Eau en reservoir"
+enf$source[enf$cHV201==72]="Eau en reservoir"
+
+enf$cHV201 <- as.factor(enf$source)
+
+
+# regroupement et calcul de l'effectif par modalité
+var_source <- enf %>% group_by(cHV201)%>% 
+               summarize( effectifs=n())
+
+var_source$eff_cum <-cumsum(var_source$effectifs)
+
+
+# Fréquences      
+var_source$pourcent <-round(prop.table(var_source$effectifs)*100,2)
+var_source$pour_cum <- cumsum(var_source$pourcent)
+
+
+# Affichage du tableau des statistiques de la variable 
+var_source
+ 
+#Diagramme
+ggplot(var_source,aes(x=cHV201, y=effectifs, fill=cHV201))+ geom_bar(stat = "identity")+ 
+   labs(x="Source d'eau ", y="effectifs")
+
+```
+
+
+
+# Etude de la variable Electricité:
+
+La variable "présence de l'électricité" est pertinente dans une étude sur l'anémie chez les enfants de moins de 5 ans. Elle offre des indices sur le niveau d'infrastructure, les conditions de vie, l'accès à l'éclairage et à la nutrition.La présence de l'électricité peut influencer la disponibilité d'appareils électroménagers pour la préparation et la conservation des aliments. Des conditions d'alimentation inadéquates liées au manque d'électricité peuvent contribuer aux carences nutritionnelles et à l'anémie. 
+Ainsi, nous avons decidé de faire un tris à plat sur cette variable. 
+
+#electricité HV206
+```{r elect HV206}
+
+# Effectifs 
+var_elec <- enf %>% group_by(cHV206)%>% 
+               summarize( effectifs=n())
+var_elec$eff_cum <-cumsum(var_elec$effectifs)
+
+# Fréquences   
+var_elec$pourcent <-round(prop.table(var_elec$effectifs)*100,2)
+var_elec$pour_cum <- cumsum(var_elec$pourcent)
+
+# Modalités
+elec <- c("Non", "Oui")
+var_elec$electricite <- elec
+
+# Noms des colonnes
+colnames(var_elec)<-c("Electricité", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","electricite")
+
+# Exportation de la table
+write.xlsx(var_elec,file="var_elec.xlsx")
+
+# Affichage du tableau des statistques de la variable
+var_elec
+
+# Diagramme
+ggplot(var_elec,aes(x=Electricité, y=effectifs, fill=electricite))+ geom_bar(stat = "identity")+ 
+  labs(x="Electricité ", y="effectifs")
+
+
+```
+On remarque que 1380 enfants vivent dans des ménages équipés d'électricité, ce qui représente 63 % de notre population. En revanche, 795 enfants résident dans des logements sans électricité, soit 37 % de l'ensemble des enfants, un pourcentage non négligeable. Ainsi, un nombre considérable d'enfants vivent dans des ménages dépourvus d'électricité.
+
+# Etude de la variable Indice de richesse (HV270) :
+La richesse du ménage peut avoir un impact sur plusieurs déterminants de la santé des enfants, y compris leur alimentation, leur accès aux soins de santé, leurs conditions sanitaires, leur éducation sanitaire, et leur accès à une eau potable de qualité. Analyser cette variable est donc importante. 
+
+#Indice de richesse HV270
+```{r indice de richesse }
+
+# Effectifs
+var_rich <- enf %>% 
+                group_by(cHV270)%>% 
+               summarize( effectifs=n())
+var_rich$eff_cum <-cumsum(var_rich$effectifs)
+
+# Fréquences   
+var_rich$pourcent <-round(prop.table(var_rich$effectifs)*100,2)
+var_rich$pour_cum <- cumsum(var_rich$pourcent)
+
+# Modalités 
+richesse <- c("Très pauvre", "Pauvre","Modeste","Riche"," Plus riche" )
+var_rich$richesse <- richesse
+
+# Noms des colonnes
+colnames(var_rich)<-c("Richesse", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","richesse")
+
+
+# Exportation de la table
+write.xlsx(var_rich,file="var_rich.xlsx")
+
+# Affichage de la table
+var_rich
+
+# Diagramme
+ggplot(var_rich,aes(x=Richesse, y=effectifs, fill=richesse))+ geom_bar(stat = "identity") + 
+  labs(x="Indice Richesse ", y="effectifs")+ geom_text(label=richesse)
+
+
+```
+D'après le diagramme et le tableau, on observe que plus de la moitié des enfants de moins de 5 ans sont issues des menages pauvres.Environ 19 % des enfants vivent dans des menages de niveau de richesse modeste et 28% vivent dans des menages riches. On a donc que la majorité des enfants (71,67%) vivent dans des menages à revenus faibles ou modestes .
+
+
+
+
+## Etude de la variable Anemie:
+L'étude de la variable anémie dans ce travail revêt une grande importance car l'anémie peut être un indicateur significatif de la santé nutritionnelle des enfants.
+L'analyse de cette variable va nous offrir des informations cruciales sur la santé nutritionnelle, les habitudes alimentaires et le bien-être global des enfants.
+Il s'agit donc de la variable la plus importante de notre étude, c'est la variable que l'on va chercher à expliquer.
+
+```{r Anemie}
+
+
+# Effectifs
+var_anemie <- enf %>% group_by(cHA57)%>% 
+               summarize( effectifs=n())
+
+var_anemie$eff_cum <-cumsum(var_anemie$effectifs)
+
+# Fréquences   
+var_anemie$pourcent <-round(prop.table(var_anemie$effectifs)*100,2)
+var_anemie$pour_cum <- cumsum(var_anemie$pourcent)
+
+# Modalités
+niv <- c("Sevère", "Moderé"," Leger","Non anémique" )
+var_anemie$niv_anemie <- niv
+
+# Noms des colonnes
+colnames(var_anemie)<-c("Anemie", "effectifs","effectifs cumulés","fréquences","fréquences cumulées","niveau")
+
+# Exportation de la table
+write.xlsx(var_anemie,file="var_anemie.xlsx")
+
+# Affichage du tableau des statistiques de la variable:
+
+# Diagramme
+ggplot(var_anemie,aes(x=Anemie, y=effectifs, fill=niveau))+ geom_bar(stat = "identity") + 
+  labs(x="Anemie ", y="effectifs")+ geom_text(label=niv)
+
+
+
+```
+DAprès avoir observer l'histogramme et le tableau ci-dessus, on remarque que, 57 % des enfants de moins de 5ans sont non anémiques. Les enfants qui ont une anémie de niveau modéré ou sevère représentent 10% et 32% des enfants souffrent d'une anémie legère. On a au total que 42% des enfants souffrent d'anémie.
+
+On peut affirmer que le taux d'enfants souffrant d'anémie est significatif. Par la suite, nous effectuerons des analyses croisées de la variable "anémie" avec d'autres variables pour déterminer s'il existe des liens entre cette dernière et les autres variables.
+
+ 
+ 
+## Tris croisés
+ 
+
+Pour faciliter , l'étude et pouvoir faire le test de khi-2, nous avons decider de regrouper certaines modalités de la variables Anémie qui présente des faibles efféctifs.
+
+```{r}
+summary(enf$cHA57)
+enf$HA57[enf$HA57==1]="Modéré"
+enf$HA57[enf$HA57==2]="Modéré"
+enf$HA57[enf$HA57==3]="Leger"
+enf$HA57[enf$HA57==4]="Non anémique"
+enf$cHA57 <-as.factor(enf$HA57)
+
+```
+### Croisement des variables anémie et niveau de richesse du menage:
+
+Nous pensons qu'il pourrait y avoir une corrélation entre l'indice de richesse du ménage et l'anémie chez l'enfant. En examinant ces deux variables simultanément, nous pourrons déterminer s'il existe une relation entre elles.
+
+#croisement anémie-richesse
+```{r crois anemie richesse }
+library(gmodels)
+anemie_rich <- table(enf$cHA57,enf$cHV270)
+
+enf$anemie <- vector("character", length = nrow(enf))
+enf$anemie[enf$cHA57=="Modéré"]="Anémique"
+enf$anemie[enf$cHA57=="Modéré"]="Anémique"
+enf$anemie[enf$cHA57=="Leger"]="Anémique"
+enf$anemie[enf$cHA57=="Non anémique"]="Non anémique"
+
+enf$anemie <-as.factor(enf$anemie)
+
+
+
+
+prop.table(table(enf$cHA57,enf$cHV270))
+
+ggplot(enf) +
+ aes(x = cHV270, fill = cHA57) +
+ geom_bar(position ="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Richesse",y="Effectif")+
+ theme_minimal()+
+ggtitle("Répartition du niveau d'anémie des enfants en fonction de l'indice de richesse")
+
+ggplot(enf) +
+ aes(x = cHV270, fill = anemie) +
+ geom_bar(position ="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Richesse",y="Effectif")+
+ theme_minimal()+
+ggtitle("Répartition d'anémie des enfants en fonction de l'indice de richesse")
+
+
+
+
+```
+On remarque en visualisant cette figure de répartition du niveau d'anémie en fonction de la richesse du ménage que le pourcentage des enfants anémiques est importante dans les ménages pauvres ou modestes que dans les menages riches. Et pour verifier la liaison entre ces deux facteurs, nous réalisons un test de  Khi-deux
+d’indépendance en posant deux hypothèses :
+
+Hypothèse nulle : les deux variables sont indépendantes
+Hypothèse alternative : les deux variables ne sont pas indépendantes
+
+#test khi-2 Niveau d'anémie Niveau de richesse 
+ 
+```{r test khi-2 Niveau danemie Niveau de richesse }
+CrossTable(enf$cHA57,enf$cHV270,chisq = T, dnn = c("Niveau d'anémie","Niveau de richesse"))
+
+
+
+```
+ 
+ 
+Sur tableau du test du Khi-deux, nous observons que la p-Valeur du test est de 0.06% ce qui est inférieur à
+5%, nous pouvons donc rejeter l’hypothèse nulle. Il existe donc un lien entre le niveau de richesse du ménage et l'anémie des enfants. 
+
+
+### Croisement anémie et niveau d'étude de la mère:
+###################################################
+Cette variable est intéressante de notre étude, car les mères ayant un niveau d'éducation plus élevé sont souvent mieux informées sur les besoins nutritionnels de leurs enfants. Elles sont susceptibles d'adopter des pratiques alimentaires plus équilibrées, ce qui contribue à prévenir l'anémie chez les enfants. C'est pourquoi nous avons décidé d'explorer la corrélation entre l'anémie et le niveau d'éducation des mères.
+
+
+```{r  croisement anemie anem et niv de mere}
+
+anemie_etud <- table(enf$cHA57,enf$cHC61)
+table(enf$cHA57,enf$cHC61)
+ggplot(enf) +
+ aes(x = cHC61, fill = cHA57) +
+ geom_bar(position = "fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Niveau d'étude de la mère",y="Effectif")+
+ theme_minimal()
+
+ggplot(enf) +
+ aes(x = cHC61, fill = anemie) +
+ geom_bar(position = "fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Niveau d'étude de la mère",y="Effectif")+
+ theme_minimal()
+
+CrossTable(enf$cHA57,enf$cHC61,chisq = T, dnn = c("Niveau d'anémie","Niveau d'étude de la mère"))
+```
+À partir de la figure ci-dessus, il est observé que plus le niveau d'éducation de la mère est élevé, moins le niveau d'anémie de l'enfant semble être élevé. Par ailleurs, on observe un taux significatif de cas d'anémie modérée ou sévère chez les enfants issus de mères ayant un niveau éducatif bas. Et pour verifier la liaison entre ces deux facteurs, nous réalisons un test de  Khi-deux
+d’indépendance en posant deux hypothèses :
+
+Hypothèse nulle : les deux variables sont indépendantes
+Hypothèse alternative : les deux variables ne sont pas indépendantes
+
+#khi-2 anemie_etud
+
+```{r khideux anemie etude}
+CrossTable(enf$cHA57,enf$cHC61,chisq = T, dnn = c("Niveau d'anémie","Niveau d'étude de la mère"))
+```
+En examinant le tableau du test du Chi-deux, on constate que la p-valeur est de 1,3%, ce qui est inférieur à 5%. Par conséquent, nous pouvons rejeter l'hypothèse nulle, indiquant ainsi l'existence d'une relation significative entre le niveau d'éducation de la mère et l'anémie chez les enfants.
+
+
+### Croisement des variables anémie et possession de moustiquaire:
+Plusieurs études scientifiques ont démontré l'existence d'une relation entre le paludisme et l'anémie, soulignant que la présence du paludisme chez un individu aggrave ou provoque l'anémie. Initialement, notre intention était d'analyser la variable du paludisme. Cependant, en constatant l'existence de 25 colonnes (HML32_1, HML32_2, ..., HML32_3), nous n'avons pas été en mesure de distinguer les colonnes correspondant aux enfants. Étant donné que le paludisme est principalement transmis par les moustiques, nous avons donc décidé d'examiner si l'utilisation de moustiquaires pouvait réduire l'état anémique chez les enfants.
+
+```{r crois anem moust}
+
+enf$HV228[is.na(enf$HV228)] <- 0
+anemie_moustiq<- table(enf$cHA57,enf$cHV227)
+
+ggplot(enf) +
+ aes(x = cHV227, fill = cHA57) +
+ geom_bar(position="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Possesion de moustiquaire",y="Effectif")+
+ theme_minimal()
+
+
+CrossTable(enf$cHA57,enf$HV227,chisq = T, dnn = c("Niveau d'anémie","Possession de moustiquaire"))
+```
+En observant la figure ci-dessus, aucune disparité de pourcentage d'enfants anémiques n'est apparente entre les ménages équipés de moustiquaires et ceux qui n'en possèdent pas. De plus, selon le test du Khi-deux d'indépendance entre ces deux variables, la p-valeur est de 76%. Ainsi, nous ne pouvons pas rejeter l'hypothèse d'indépendance entre le niveau d'anémie et la possession de moustiquaires. 
+
+
+### Croisement des variables anémie et region:
+
+Comme nous l'avons déjà souligné, le niveau d'anémie chez les enfants peut également être lié aux facteurs environnementaux et socio-économiques de chaque région.
+
+```{r croisement anemie et region}
+anemie_region <-table(enf$anemie,enf$cHV024)
+anemie_region
+
+tab_reg <-data.frame(ID=c(1:10), region=c("Western","Central","Greater Accra ", "Volta ","Eastern ","Ashanti ","Brong Ahafo","Northern","Upper East","Upper West"))
+
+tab_reg
+
+
+ggplot(enf) +
+ aes(x = cHV024, fill = anemie) +
+ geom_bar(position = "fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Région",y="Effectif")+
+ theme_minimal()
+
+ggplot(enf) +
+ aes(x = cHV024, fill = cHA57) +
+ geom_bar(position = "fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Région",y="Effectif")+
+ theme_minimal()
+
+CrossTable(enf$cHA57,enf$cHV024,chisq = T, dnn = c("Niveau d'anémie","region"))
+
+```
+En examinant le graphique ci-dessus, nous pouvons constater que le pourcentage d'enfants anémiques varie d'une région à l'autre. De même, le pourcentage des cas modérés présente des variations régionales. La région qui affiche le taux le plus élevé d'enfants anémiques est la région Central, avec un pourcentage de 53%, soit plus de la moitié. En revanche, les régions Ashanti et Brong-Ahafo enregistrent les taux les plus bas d'enfants anémiques (33% et 34%) ainsi que des pourcentages équivalents de cas modérés. Ces deux régions centrales présentent des pourcentages quasiment identiques et sont situées à proximité l'une de l'autre.
+
+Par ailleurs, on observe que les régions Upper West et Upper East présentent des taux similaires d'enfants anémiques, ainsi que des pourcentages identiques de cas modérés. Les régions Western, Central, Greater Accra, Volta et Eastern, situées au sud du Ghana, présentent également des pourcentages presque similaires de cas anémiques.
+
+Selon les analyses précédentes, il semble y avoir une corrélation entre l'anémie chez les enfants et la région du ménage. Afin de vérifier cette relation, nous avons effectué un test du Khi-deux d'indépendance en formulant deux hypothèses :
+
+Hypothèse nulle : les deux variables sont indépendantes.
+Hypothèse alternative : les deux variables ne sont pas indépendantes.
+
+Les résultats du test du Khi-2 révèlent une p-valeur de 0,5 %, ce qui est pratiquement négligeable. Par conséquent, nous rejetons l'hypothèse d'indépendance entre les deux variables.
+
+
+### Croisement des variables anémie et source d'eau:
+La qualité de l'eau et les composantes chimiques varient d'une source à l'autre. Pour mener une analyse approfondie de cette variable et effectuer des regroupements pertinents, il serait nécessaire de disposer des caractéristiques spécifiques de chaque source. Malheureusement, ces informations ne nous sont pas accessibles en raison d'un manque d'informations détaillées. Néanmoins, nous procédons à des regroupements en fonction de critères basiques tels que la source protégée, non protégée, la source canalisée et l'eau en réservoir.
+
+```{r croisement anemie et source }
+anemie_source <- table(enf$cHA57,enf$cHV201)
+
+ggplot(enf) +
+ aes(x = cHV201, fill = HA57) +
+ geom_bar(position="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Source d'eau",y="Effectif")+
+ theme_minimal()
+
+tab_source <-data.frame(ID=c(11,12,13,21,31,32,41,42,43,51,61,71,72), region=c(
+  "Canalisée dans le logement",
+  "Canalisée dans la cour/parcelle", 
+"Robinet public/fontaine",
+"Puits tubulaire ou forage",
+"Puits protégé",
+"Puits non protégé",
+"Source protégée",
+"Source non protégée",
+"Rivière/barrage/lac/étang/cours d'eau",
+"Eau de pluie",
+"Camion-citerne",
+"Eau en bouteille",
+"Eau en sachet") )
+
+tab_source
+var_source
+CrossTable(enf$anemie,enf$cHV201,chisq = T, dnn = c("Niveau d'anémie","source d'eau"))
+
+```
+Les graphiques ci-dessus révèlent que le taux d'enfants anémiques est sensiblement similaire quel que soit la source d'eau. Cependant, on observe une aggravation de l'anémie chez les enfants consommant de l'eau provenant d'une source non protégée, tandis qu'une diminution est constatée chez ceux buvant de l'eau issue d'un réservoir (bouteille, sachet, camion-citerne).
+
+Suite à l'application du test du Khi-2, nous obtenons une p-valeur de 17%. Cette valeur, bien qu'elle ne renforce pas l'indépendance entre les deux variables, ne permet pas non plus de rejeter complètement l'hypothèse de dépendance.
+
+
+
+### Croisement des variables anémie et sexe de l'enfant:
+La sélection de cette variable a été motivée par la curiosité. Nous souhaitons déterminer si la maladie est spécifique à un seul genre. Pour ce faire, nous avons effectué les analyses ci-dessous.
+
+
+```{r croisement anemie et sexe}
+
+anemie_sex <- table(enf$cHA57,enf$cHC27)
+
+ggplot(enf) +
+ aes(x = cHC27, fill = cHA57) +
+ geom_bar(position="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Sexe de l'enfant",y="Effectif")+
+ theme_minimal()
+
+CrossTable(enf$cHA57,enf$cHC27,chisq = T, dnn = c("Niveau d'anémie","Sexe de l'enfant"))
+
+```
+Nous constatons que la répartition des niveaux d'anémie chez les enfants est pratiquement similaire pour les deux sexes. En utilisant les résultats du test du khi-2, on peut conclure que l'anémie ne dépend pas du genre de l'enfant, ce qui est en accord avec les résultats de l'analyse univariée.
+
+### Croisement des variables anémie et électricité:
+
+```{r crois anemie elect}
+
+anemie_elec <- table(enf$cHA57,enf$cHV206)
+
+ggplot(enf) +
+ aes(x = cHV206, fill = cHA57) +
+ geom_bar(position="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Electricité",y="Effectif")+
+ theme_minimal()
+
+CrossTable(enf$cHA57,enf$cHV206,chisq = T, dnn = c("Niveau d'anémie","Electricité"))
+```
+
+Nous constatons que dans les foyers dépourvus d'électricité, le taux d'enfants anémiques est plus élevé que celui des foyers disposant de l'électricité. Il est à noter également que le taux de cas modérés est plus élevé dans les ménages sans électricité.
+La relation entre ces deux variables est confirmée par le test du Khi-2. En effet, la p-valeur (2,4%) obtenue à partir des résultats du test nous permet de rejeter l'hypothèse d'indépendance entre ces deux variables. 
+
+### Croisement des variables anémie et milieu du ménage:
+Il est également intéressant de croiser ces deux variables, car les zones rurales et urbaines présentent des caractéristiques distinctes, telles que les conditions environnementales et les habitudes alimentaires. Ces facteurs pourraient contribuer à des disparités de taux d'enfants anémiques entre les deux zones.
+
+```{r croise enemie milieu}
+
+anemie_zone <- table(enf$cHA57,enf$cHV025)
+
+ggplot(enf) +
+ aes(x = cHV025, fill = cHA57) +
+ geom_bar(position="fill") +
+ scale_fill_hue(direction = 1) +
+ labs(x = "Milieu du ménage",y="Effectif")+
+ theme_minimal()
+
+CrossTable(enf$cHA57,enf$cHV025,chisq = T, dnn = c("Niveau d'anémie","Milieu du ménage"))
+
+```
+D'après les graphiques précédents, on observe une différence de taux d'enfants anémiques entre les deux zones (rurales et urbaines). Notamment, le pourcentage de cas modérés est plus élevé en milieu rural qu'en milieu urbain.
+
+Il semble y avoir une corrélation entre la zone et le niveau d'anémie des enfants, ce qui est corroboré par le test du khi-2 donnant une p-valeur de 1,5%.
+
+
+
+### Croisement des variables anémie et âge:
+Il s'agit ici d'analyser si l'anémie affecte davantage certaines tranches d'âge que d'autres. Selon les diagrammes en boîte ci-dessous, on constate que la distribution de l'âge pour les enfants anémiques est presque identique à celle des enfants non anémiques. Ainsi, on ne peut pas conclure à l'existence d' une dépendance entre ces deux variables.
+
+```{r crois anem et age}
+
+anemie_age <- table(enf$anemie,enf$HC1)
+
+ggplot(enf,aes(x =anemie, y= HC1)) +
+ geom_boxplot()
+
+
+CrossTable(enf$cHA57,enf$HC1,chisq = T, dnn = c("Niveau d'anémie","âge de l'enfant"))
+
+
+```
+
+# ACM:
+
+Dans cette section, nous entreprenons une analyse des correspondances multiples sur les variables d'intérêt, auxquelles nous avons ajouté les variables nécessaires. Dans un premier temps, nous examinons la table récapitulative des variables ajoutées aux variables de départ pour traiter les cas de valeurs manquantes. Nous avons décidé de conserver 15 variables, en éliminant 6 parmi celles demandées que nous jugeons moins importantes pour notre étude.
+
+En particulier, les variables radio (cHV207) et télévision (cHV208) remplissent des rôles presque similaires (transmission d'informations, sensibilisation), et la plupart des ménages utilisent davantage la télévision que la radio, même s'ils possèdent les deux. C'est pourquoi nous avons choisi de conserver la variable télévision plutôt que la radio.
+Quant aux variables matière de construction du sol (cHV213), présence d'un PC ou d'une tablette (cSH110L) et présence d'une armoire ou d'un placard (cSH110R), nous ne les avons pas conservées car nous estimons qu'elles ne sont pas directement liées à la maladie d'anémie chez les enfants.
+En ce qui concerne les variables moustiquaires autour des lits (cHV227), l'âge des enfants (HC1) et le sexe des enfants (cHC27), les résultats obtenus à partir des analyses bivariées nous ont conduit à rejeter ces variables. Cela justifie nos choix quant aux variables que nous utiliserons ultérieurement.
+
+Dans la table "menage1", nous stockons les variables que nous avons choisi de conserver.
+
+
+```{r table menage1}
+menage1 <-select(enf,anemie,cHC61,cHV024,cHV025,cHV227,cHV270,cHV206,cHV201, cHV205,cHV208,cHV209,cHV226,cSH110P,cSH110Q,cSH110S,HC1)
+
+
+ 
+
+summary(select(enf,cHV205,cHV208,cHV209,cHV226,cSH110P,cSH110Q,cSH110S))
+```
+
+Nous observons que les valeurs manquantes sont négligeables, avec seulement une occurrence manquante pour les variables cHV208 et cSH110Q. Nous avons choisi de remplacer ces cas par la modalité la plus fréquente pour chacune des variables.
+
+
+```{r remplacement des NA}
+menage1$cHV208[is.na(menage1$cHV208)] <- 1
+
+menage1$cSH110Q[is.na(menage1$cSH110Q)] <- 1
+
+menage1$cHV208 <- as.factor(menage1$cHV208)
+
+menage1$cSH110Q <- as.factor(menage1$cSH110Q)
+
+summary(select(menage1,cHV205,cHV208,cHV209,cHV226,cSH110P,cSH110Q,cSH110S))
+```
+
+
+
+Certaines variables, telles que la région des enfants de moins de 5 ans, le type de toilettes et le type de combustible de cuisson pour les ménages, nécessitent un regroupement et un recodage des modalités afin de faciliter les calculs de l'Analyse des Correspondances Multiples (ACM) et sa compréhension.
+
+
+#regroupement des modalités
+  
+```{r regroup mod}
+class(menage1$cHV205)
+
+menage1$cHV205<-fct_collapse(menage1$cHV205,"aucune installation"= c("31"), "latrine" = c("21","22","23"),"chasse d'eau"=c("12","11"),"autre toilette"=c("13","14","15","42","43"))
+
+summary(menage1$cHV226)
+
+
+menage1$cHV226<-fct_collapse(menage1$cHV226,"charbon"=c("6","7"),"bois"=c("8","9"),"elec_gaz"=c("1","2","5","10","95"))
+summary(menage1$cHV226)
+
+
+
+menage1$cHV024<-fct_collapse(menage1$cHV024,"Nord"=c("10","9"),"centre"=c("6","7"), "sud-ouest"=c("1","2"),"sud-est"=c("3","4","5"),"Northem"="8")
+summary(menage1$cHV024)
+
+menage1$HC1 <- as.numeric(menage1$HC1)
+menage1$HC1<-cut(menage1$HC1, breaks = 4,labels=c("0-15","15-30","30-45","45-60"))
+```
+
+#Rénommer les modalité
+
+```{r renom modal}
+
+
+menage1$cHC61 <- fct_recode(menage1$cHC61,"pas etud "="0"," prim"="1"," colg "="2"," Lyc "="3")
+menage1$cHV025 <- fct_recode(menage1$cHV025,"urbain"="1","rural"="2")
+menage1$cHV270 <- fct_recode(menage1$cHV270,"t_pauvre"="1","pauvre"="2","modeste"="3","riche"="4","t_riche"="5")
+menage1$cHV208 <- fct_recode(menage1$cHV208,"non"="0","oui"="1")
+#menage1$cHC27 <- fct_recode(menage1$cHC27,"M"="1","F"="2")
+
+menage1$cHV209 <- fct_recode(menage1$cHV209,"non"="0","oui"="1")
+menage1$cHV206 <- fct_recode(menage1$cHV206,"non"="0","oui"="1")
+menage1$cHV227 <- fct_recode(menage1$cHV227,"non"="0","oui"="1")
+
+menage1$cSH110P <- fct_recode(menage1$cSH110P,"non"="0","oui"="1")
+menage1$cSH110Q <- fct_recode(menage1$cSH110Q,"non"="0","oui"="1")
+menage1$cSH110S <- fct_recode(menage1$cSH110S,"non"="0","oui"="1")
+
+# renommons les colonnes
+names(menage1) <- c("Anemie","Educ_M","Reg", "Zn","Mous", "Irich","Elec","EP","Toil", "Tlv", "Ref", "Comb","Lit","Tab", "Net", "age_enf")
+
+menage2 <- select(menage1,Zn,EP,Toil,Tlv,Ref,Lit,Tab,Comb,Net)
+
+# Visualisation de la table
+view(menage2)
+
+```
+## ACM du tableau de Burt
+
+```{r acm burt}
+library(ade4)
+menage2 <- data.frame(menage2)
+acm.burt(menage2, menage2)
+
+```
+
+```{r}
+library(FactoMineR)
+acm1<-MCA(menage2,graph=FALSE, method = "Burt")
+acm1$eig
+
+```
+## Choix des axes:
+## Valeurs propres:
+Nous avons pour cette ACM s=9 variables (questions) actives avec, en tout, p=23 modalités. Pour
+cette analyse, le nombre d’axes ainsi que le nombre de valeurs propres sera de 14.
+Voici ci-dessous le tableau des valeurs propres ainsi que l'éboulis de celles-ci.
+
+```{r val p}
+acm1$eig
+library(factoextra)
+acm1$eig
+fviz_eig(acm1)
+
+```
+
+
+Si on utilise le critère du Coude pour choisir le nombre d'axe à retenir, nous pouvons décider de retenir 1 axe factoriel. En effet, la courbe se stabilise à partir de la deuxième valeur propre. Les deux premiers axes expliquent la majorité de l’inertie, on peut retenir les axes 1 et 2.
+Afin d’utiliser le critère de Kaiser, nous devons regarder les valeurs propres supérieures à la
+moyenne. Ici, l’inertie moyenne est de : 1/9 = 0,11. Donc, ici, nous retiendrons qu'un seul axe, à savoir l'axe 1 (car $\lambda_1 =0.19 >1/9$).
+
+
+
+
+
+## Taux d'inertie modifiée:
+Souvent en ACM, il est un peu delicat de choisir les axes par les deux critères utilisés ci-dessus. Dans ce cas on fait appel au Taux d'inertie modifiée.
+Enfin,  utilisons le critère des taux d'inertie modifiés (en supposant que nous avons choisi trois axes):
+On calcule les deltas et les taux modifiés et on compare à 1/3=0.33
+Inertie totale $I=\frac{P}{S}-1$
+Le taux d'inertie modifiée associée à l'axe factoriel i est donné par:
+$$\frac{\lambda'_{i}}{\sum_{j;\lambda_j >\frac{1}{s}}\lambda'_{i}} $$
+
+avec $\lambda_{i}$ les valeurs propres initiales et $ \lambda'_{i} = (\frac{s}{s-1})^2 (\lambda_{i}-\frac{1}{s})$
+
+#calcul des taux d'inertie modifiée
+```{r tauxmodif}
+s=9
+
+delta=(acm1$eig[1:3,1]-1/s)^2
+
+Iprime=delta/sum(delta);
+Iprime
+
+```
+
+
+```{r}
+
+s<-9
+
+im<-1/s
+
+lambda1<-acm1$eig[1,1]
+lambda_1<-((s/(s-1))^2)*((lambda1 - (1/s))^2)
+
+lambda2<-acm1$eig[2,1]
+lambda_2<-((s/(s-1))^2)*((lambda2 - (1/s))^2)
+
+lambda3<-acm1$eig[3,1]
+lambda_3<-((s/(s-1))^2)*((lambda3 - (1/s))^2)
+
+
+LambdaSum <- sum(lambda_1,lambda_2,lambda_3)
+(lambdamodif1<-lambda_1/LambdaSum)
+(lambdamodif2<-lambda_2/LambdaSum)
+(lambdamodif3<-lambda_3/LambdaSum)
+
+```
+
+Avec ce critère, on  choisirais deux axes,l'axe 1 et l'axe 3 car $\lambda'_1=0.331$ et $\lambda'_3 =0.36 $. 
+ Par la suite , nous regarderons le nuage sur le plan (1,2) et éventuellement sur le plan(1,3).
+
+
+## Interprétation des résultas:
+
+## Contributions des modalités:
+Nous allons, dans cette partie, analyser la contribution relative des différentes modalités sur les
+deux premiers axes. Pour cela, nous allons observer le tableau des contributions 
+relatives des modalités ainsi que les diagrammes. La contribution moyenne d'une modalité sur un axe vaut 1/23=4.3%. On va considérer qu'une maodalité contribue significativement à la formation de l'axe si sa cpntribution dépasse 4,3 %.
+
+```{r contribution}
+acm1$var$contrib[,1:2]
+#acm1$var$coord[,1:2]
+fviz_contrib(acm1, choice = "var", axes = 1)
+
+```
+
+Pour le premier axe, nous observons que les modalités qui contribuent le plus à la formation de cet axe sont les suivantes : "Ref_oui" avec une contribution de 9.74%, "Urbain" avec 7.66%, "Elec_gaz" avec 7.65%, "_Tlv_non" avec 6.96%, "Tlv_oui" avec 6.76%, "Bois" avec 6.43%, "Chasse d'eau" avec 6.43%, "Eau en réservoir" avec 6.23%, "Rural" avec 5.30%, "Aucune installation" avec 5.18%, "Lit_non" avec 5.14%, et "Net_oui" avec 4.56%.
+
+```{r axe2contrib}
+
+fviz_contrib(acm1, choice = "var", axes = 2)
+```
+
+Pour le deuxième axe, les modalités qui présentent les contributions les plus significatives à la formation de cet axe sont les suivantes : "Elec_gaz" avec une contribution de 13.5%, "Chasse d'eau" avec 10.97%, "Latrine" avec 10.93%, "Tab_non" avec 10.05%, "Charbon" avec 8.69%, "Lit_non" avec 8.12%, "Eau de réservoir" avec 7.82%, "Source canalisée" avec 7.27%, "Net_oui" avec 7.22%, et "Aucune installation" avec 5.80%.
+
+
+
+Ensuite, nous avons affiché graphiquement les modalités sur le premier plan factoriel en les distinguant par des couleurs en fonction de leur contribution à l'inertie totale. Nous ne procéderons pas à l'interprétation des modalités ayant une contribution minimale à la construction du plan factoriel.
+
+
+
+```{r}
+fviz_contrib(acm1, choice = "var", axes = c(1,2))
+
+```
+En observant les graphiques précédents, on constate que les modalités qui contribuent le plus significativement au plan sont Ref_oui, elec_gaz, chasse d'eau, urbain, Eau en réservoir, Tlv_non, Tlv_oui, bois, Lit_non, aucune installation, Net_oui, rural, Tab_non.
+
+```{r nuagecontribplan}
+fviz_mca_var(acm1, col.var = "contrib",labelsize=3)
+
+```
+
+
+## Qualité de réprésentations:
+
+Ensuite, nous examinons les qualités de représentation des modalités sur les différents axes. Nous concentrons notre attention uniquement sur la qualité de représentation sur les deux premiers axes, car ils expliquent la majeure partie de l'inertie totale. Une qualité de représentation plus proche de 1 indique une représentation efficace de la modalité. Ainsi, considérerons qu'une modalité est bien représentée si sa qualité de représentation est supérieure à 0,50.
+Connaître, la qualité de repsésentation d'une modalité sur un axe est important avant de pour pouvoir l'interpreter.
+
+
+En effectuant l'Analyse des Correspondances Multiples (ACM) avec R, nous obtenons le tableau suivant.   
+
+
+```{r qualite}
+acm1$var$cos2[,1:2]
+sort(acm1$var$cos2[,2],decreasing = TRUE) 
+
+QLT12=acm1$var$cos2[,1]+acm1$var$cos2[,1]
+QLT12
+fviz_cos2(acm1, choice = "var", axes = 1)
+fviz_cos2(acm1, choice = "var", axes = 2)
+fviz_cos2(acm1, choice = "var", axes = 1:2)
+
+
+```
+Ainsi, sur l'axe 1, les modalités telles que bois (0,90), Tlv_oui (0,89), Tlv_non (0,89), Ref_oui (0,88), Ref_non (0,88), urbain (0,86), rural (0,86), elec_gaz (0,70) sont considérées comme bien représentées. En revanche, les modalités aucune installation (0,67), Eau en réservoir (0,64), chasse d'eau (0,64), Lit_non (0,61), Lit_oui (0,61), Source protégée (0,54), Net_non (0,53), Net_oui (0,53) montrent une représentation moyennement satisfaisante.
+
+Par contre, d'autres modalités, en particulier "autre toilette" (0,11) et "latrine" (0,06), affichent des qualités de représentation faibles.
+
+Pour l'axe 2, la modalité ayant la plus grande qualité de représentation est latrine (0,47). Les autres modalités ont des qualités faibles.
+```{r}
+graphacm1 <-fviz_mca_var(acm1, col.var = "cos2", labelsize=3)
+graphacm11 <- fviz_mca_var(acm1, select.var = list(cos2=0.5),labelsize=3)
+graphacm1
+graphacm11
+#ggsave(graphacm1, file="graphacm1.pdf")
+
+```
+
+## Interprétation des axes :
+
+Axe 1 : À droite se trouvent les enfants de moins de 5 ans issus de ménages situés dans des zones urbaines, cuisinant avec du charbon, équipés d'une télévision, d'un lit, d'une table et d'une connexion internet, utilisant de l'eau potable provenant de sources canalisées, et disposant de latrines pour les toilettes. En revanche, à gauche se situent les enfants vivant en zones rurales, avec des mères utilisant du bois pour cuisiner, dans des ménages dépourvus d'installations sanitaires, et ne possédant ni télévision, ni lit, ni table.
+
+L’axe 1 met en opposition les enfants résidant dans des ménages plus aisés en zones urbaines et ceux résidant dans des ménages moins favorisés en zones rurales.
+
+Axe 2 : L’axe 2 distingue les enfants provenant de ménages qui cuisinent au gaz ou à l'électricité, utilisent de l'eau de réservoir comme source d'eau potable, et disposent de toilettes avec chasse d'eau. En revanche, il différencie ceux vivant dans des ménages cuisinant avec du charbon et ayant des latrines comme installation sanitaire. Cet axe met en relief les différences entre les enfants de ménages aisés et ceux de ménages plus modestes.
+
+## Interpretation de la proximité entre les modalités:
+Deux modalités sont proches signifie que ce sont les mêmes individus ou des individus semblables qui les possèdent. 
+
+Les modalités "Chasse d'eau", "Elec_gaz", "Net_oui", et "Eau réservoir" présentent des similitudes dans leurs profils. Cette observation suggère que les ménages où l'on cuisine avec du gaz ou de l'électricité et qui disposent de toilettes à chasse d'eau sont vraisemblablement également équipés d'internet et utilisent de l'eau provenant de citernes ou de bouteilles comme source d'eau potable.
+
+
+Les modalités "Tab_non", "Lit_non", et "Aucune installation" montrent des profils similaires, suggérant que les ménages où les enfants ne disposent d'aucune installation pour les toilettes ont probablement une forte probabilité de ne pas avoir de lit ni de table.
+
+Inversement, les modalités "Urbain", "Tlv_oui", et "Ref_oui", ainsi que les modalités "Rural", "Tlv_non", et "Ref_non", présentent des profils opposés, ce qui semble cohérent étant donné les différences entre les ménages ruraux et urbains.
+
+
+
+```{r disjonctif}
+
+disj = acm.disjonctif(menage2)
+head(disj)
+
+```
+
+```{r}
+library(factoextra)
+library(FactoMineR)
+res.MCA1<-MCA(menage2,graph=F)
+
+```
+
+```{r}
+res.MCA<-MCA(menage2,graph=FALSE)
+ plot.MCA(res.MCA, choix='var',title="Graphe des variables",col.var=c(1,2,3,4,5,6,7,8,9))
+graphacm2 <- plot.MCA(res.MCA,col.var=c(1,1,2,2,2,2,3,3,3,3,4,4,5,5,6,6,7,7,8,8,8,9,9),title="Graphe de l'ACM",label =c('var'))
+graphacm2
+
+#ggsave(graphacm2, file="graphacm2.pdf")
+```
+
+Selon l'observation de la figure ci-dessus, on constate que les enfants positionnés dans la partie supérieure droite du quadrant résident au sein de ménages aisés, équipés d'internet, de cuisinières à gaz ou électriques, et disposant de toilettes à chasse d'eau. En revanche, la majorité des enfants semble concentrée au centre du quadrant, suggérant qu'ils habitent dans des foyers plus modestes caractérisés par la possession de tables et de lits, mais dépourvus d'accès à internet et dotés de toilettes équipées de latrines.
+
+Une minorité d'enfants provient de ménages très défavorisés, dépourvus de lits, de tables et d'installations sanitaires. Ces ménages très pauvres se distinguent par une absence d'équipements de base. 
+
+## ACM en ajoutant les variables supplémentaires et valeurs tests.
+Nous avons décidé de faire l'ACM avec les variables concernant notre étude à savoir Niveau d'étude de la mère, la zone des enfants, les régions, la possesion de moustiquaire, l'indice de richesse et l'éléctricité comme variables actives. Et en variable supplémentaire notre variable à expliquer l'Anémie.
+En effet, nous avons observé que si nous conservons les mêmes variables actives que précédemment et que nous rajoutons en supplémentaire les 5 nouvelles variables, l’ACM ne rendait pas un résultat exploitable pour notre problèmatique, du fait que ces variables concernaient plus les équpements des ménages alors que notre problèmatique est sanitaire.
+
+```{r}
+menage3 <- menage1[,c(1:7)]
+acm3 <-MCA(menage3,quali.sup =c(1),graph = TRUE, axes=c(1,5))
+
+```
+```{r}
+fviz_eig(acm3)
+```
+
+Si l'on utilisait le critère du coude on  retiendrait que les deux premiers axes soit 30,7% de l'inertie totale. Mais pour des raisons d'interprétabilité, on a considérer le plan (1,5). Sur ce plan on conserve 27,6 % de l'information totale. 
+
+```{r}
+graphacm3 <-fviz_mca_var(acm3, col.var = "cos2",labelsize=3, axes = c(1,5))
+fviz_mca_var(acm3, select.var = list(cos2=0.1),labelsize=3, axes=c(1,5))
+#ggsave(graphacm3, file="graphacm3.pdf")
+```
+ 
+En analysant la distribution des modalités en relation avec la variable supplémentaire "Anémie", nous observons une tendance marquée. Du côté droit, un regroupement de modalités telles que "Elec_oui", "urbain", "colg", "t_riche", avec la modalité "Non_anemique" qui leur est proche. Cela suggère que les enfants issus de ménages aisés, bénéficiant de l'électricité, résidant dans des zones urbaines, et dont les mères ont atteint au moins un niveau collégial, ont de fortes chances de ne pas être anémiques.
+
+À l'inverse, du côté gauche, les modalités "rural", "Elec_non", "pas_etud", "t_pauvre" se regroupent, et la modalité "anemique" est proche d'elles. Cette observation indique que la plupart des enfants anémiques proviennent de ménages pauvres, sans électricité, situés en milieu rural, et dont les mères n'ont pas suivi d'études.
+
+Par ailleurs, les modalités "Anemique" et "Non_anemique", ainsi que "Mous_oui" et "Mous_non", sont opposées deux à deux le long de l'axe 2. Cela suggère que les enfants qui utilisent des moustiquaires autour de leurs lits sont moins susceptibles de souffrir de l'anémie que ceux qui n'en ont pas.
+
+Ainsi, il semble que le niveau d'éducation de la mère, le niveau de richesse du ménage, la zone de résidence, la disponibilité d'électricité et la possession de moustiquaires ont un impact significatif sur la prévalence de l'anémie chez les enfants.
+
+Il est notable que le nuage de modalités souligne davantage l'opposition entre les enfants provenant de ménages aisés en zones urbaines, dont les mères ont suivi des études, et ceux issus de ménages défavorisés en zones rurales, dont les mères n'ont pas poursuivi d'études, plutôt que l'opposition entre les enfants anémiques et non anémiques. Cette observation peut s'expliquer par les corrélations significatives existant entre le niveau d'éducation de la mère, la richesse du ménage et la zone de résidence ainsi que la taille de l'échantillon. Néanmoins, la relation avec l'anémie demeure pertinente.
+
+
+### Valeur test
+
+
+```{r}
+acm3$quali.sup$v.test[,c(1:5)]
+
+```
+Ce  resultat prouve le choix de notre plan, car les contrbutions des modalités Anemie et Non_anémique sur l'axe 5 sont plus importantes que les autres
+
+```{r}
+acm3$quali.sup$coord[,c(1:5)]
+
+acm3$quali.sup$coord[,1:5]^2/sum(acm3$quali.sup$coord[,c(1:5)]^2)
+acm3$quali.sup$coord[,5]^2/sum(acm3$quali.sup$coord[,c(1:5)]^2)
+
+```
+On remarque que la qqualité de réprésentation des modalités Anemie et Non_anémique sur l'axe 5 sont meilleures que sur les autres axes.
+
+
+D'après la sortie R ci-dessus, nous pouvons formuler les commentaires suivants :
+
+La modalité "Anemique" se positionne au-dessus de l’axe 1 et légèrement à gauche de l'axe 2. En revanche, la modalité "Non_anemique" se trouve en dessous de l'axe 1, juste à gauche de l'axe 2. Cela suggère que les enfants issus de ménages où les mères ont atteint un niveau d'éducation supérieur au primaire sont plus susceptibles d'être anémiques, tandis que ceux dont les mères ont fait des études et proviennent de ménages plus aisés sont positionnés davantage à droite de l’axe 2.
+
+
+

@@ -43,12 +43,12 @@ Quelques variables intéressantes pour notre études:
 
 ## Selection des enfants
 
- Pour pouvoir répondre à notre problèmatique, il nous a fallu la transformer la table d'origine.
+Pour pouvoir répondre à notre problématique, il nous a fallu la transformer la table d'origine.
 En effet, les lignes de la table d'orignine correspondaient aux  menages, or notre étude est basée sur les enfants. Pour se faire, nous avons créer un nouveau tableau nommé enfant, dont chaque ligne correspond à un enfant. Dans ce nouveau tableau, chaque enfant a sa prpopre valeur pour des variables individuelles à l'exemple du niveau d'anemie, le niveau maximal d'étude atteint par la mère, l'age de l'enfants et  bien d'autre variable communes avec les enfants de même menage. 
 
 Dans un premier temps nous avons savoir combien d'enfant de moins de 5 ans on a dans la table menage . Pourcelà on a decider de regarder la variable HC1 (âge des enfants) composé de 7 colonnes (Hc1_1,..HC1_7). Avec le code ci-dessus, on remarque l'âge minimum est de 0 mois et l'âge maximum est 59 mois (5 ans ) et que la colonnes HC1_7 est vide.
 
-#resumé des colonnes HC1
+## R2sumé des colonnes HC1:
 
 ```{r res colonnes HC1 }
 summary(select(menage,HC1_1:HC1_7))
@@ -58,7 +58,7 @@ summary(select(menage,HC1_1:HC1_7))
 Pour compter le nombre d'enfant, on a compté le nombre de lignes  qui contiennent des valeurs pour les 6 colonnes HC1_1, jusqu'à HC1_6. Au total on a trouvé 3238.
 
 
-#nombre des enfants
+## Nombre des enfants:
 ```{r nbr enfant}
 
 data1 <- menage %>%
@@ -94,7 +94,7 @@ summary(data1$HA57_1)
 summary(data2$HC61_1)
 ```
 
-#Selection des enfants
+## Selection des enfants:
 ```{r selection enfant}
 # les premiers enfants
 
@@ -234,7 +234,7 @@ enf$cSH110S <- as.factor(enf$SH110S)
 
 # Analyse  Statistique:
 
-## Etude univariée 
+### Etude univariée :
 Il s'agit d'une étape cruciale en analyse statistique. Cette étape va servir d'une base solide pour faire des analyses statistiques plus avancées et à tirer des conclusions plus informées dans le cadre de notre travail.
 
 Nous allons réaliser le tris à plat des variables pertinentes pour notre étude.

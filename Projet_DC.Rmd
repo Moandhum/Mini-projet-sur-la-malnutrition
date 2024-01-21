@@ -1,5 +1,5 @@
 ---
-title: "projet donné cat"
+title: "Analyse de l’Anémie comme indicateur de malnutrition chez les enfants ghanéens"
 output:
   html_document: default
   word_document: default

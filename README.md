@@ -23,4 +23,4 @@ Pour répondre à ces questions, nous avons mené :
 
 ## Conclusion
 
-Cette étude vise à identifier les facteurs clés contribuant à l'anémie chez les enfants ghanéens afin de mieux orienter les interventions et améliorer la santé des enfants dans cette région.
+Les résultats de notre étude ont montré que des facteurs tels que le niveau d'éducation de la mère, la région, ainsi que les conditions sanitaires, environnementales et géographiques sont significativement liés à l'anémie chez les enfants ghanéens. 

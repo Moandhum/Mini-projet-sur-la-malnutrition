@@ -1,4 +1,4 @@
-# Analyse de l'Anémie comme Indicateur de Malnutrition chez les Enfants Ghanéens
+# Analyse de l'anémie comme indicateur de malnutrition chez les Enfants Ghanéens
 
 L'anémie chez les enfants de moins de cinq ans est un grave problème de santé publique mondial. Bien que des interventions telles que la supplémentation en fer et l'enrichissement alimentaire aient été mises en œuvre, la prévalence mondiale de l'anémie reste élevée, atteignant 42,6% et contribuant à 45% des décès d'enfants. En Afrique, cette prévalence atteint même 68%, surtout dans les régions où le paludisme est endémique.
 

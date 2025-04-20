@@ -1,11 +1,20 @@
-# Analyse de l'anémie comme indicateur de malnutrition chez les Enfants Ghanéens
+# Analyse de l'anémie chez les enfants ghanéens
 
-L'anémie chez les enfants de moins de cinq ans est un grave problème de santé publique mondial. Bien que des interventions telles que la supplémentation en fer et l'enrichissement alimentaire aient été mises en œuvre, la prévalence mondiale de l'anémie reste élevée, atteignant 42,6% et contribuant à 45% des décès d'enfants. En Afrique, cette prévalence atteint même 68%, surtout dans les régions où le paludisme est endémique.
+L’anémie touche près de 43 % des enfants dans le monde et jusqu’à 68 % en Afrique, constituant un indicateur majeur de malnutrition infantile. Ce projet vise à identifier les facteurs associés à l’anémie chez les enfants de moins de cinq ans au Ghana.
 
-## Objectifs
+## 📊 Données
 
-Ce projet vise à analyser les facteurs influençant l'anémie chez les enfants ghanéens de moins de cinq ans, en explorant :
+Les données proviennent de l’Enquête Démographique et de Santé du Ghana (2019), incluant des mesures d’hémoglobine et des informations sur l’environnement, la nutrition, l’éducation des mères, et l’exposition au paludisme. 
 
+## 🧪 Méthodologie
+
+1. **Analyses univariées** : Examen individuel de nombreuses variables.
+2. **Analyses croisées** : Études des relations entre plusieurs variables.
+3. **Analyses des Correspondances Multiples (ACM)** : Exploration approfondie des relations complexes entre les variables.
+
+## ✅ Résultats 
+
+Les facteurs les plus associés à l’anémie sont :
 - Les conditions socio-économiques
 - Les facteurs géographiques
 - Le niveau d'éducation des mères
@@ -13,14 +22,26 @@ Ce projet vise à analyser les facteurs influençant l'anémie chez les enfants 
 - Les conditions sanitaires et environnementales
 - La prévalence du paludisme
 
-## Méthodologie
+## ⚙️ Utilisation
 
-Pour répondre à ces questions, nous avons mené :
+1. Cloner ce dépôt :  
+   ```bash
+   git clone https://github.com/ton-utilisateur/ton-depot.git
+   ```
+2. Ouvrir et exécuter le fichier `.Rmd` dans RStudio  
+3. Exécuter l'analyse en tricotant le document (`Knit`)
 
-1. **Analyses univariées** : Examen individuel de nombreuses variables.
-2. **Analyses croisées** : Études des relations entre plusieurs variables.
-3. **Analyses des Correspondances Multiples (ACM)** : Exploration approfondie des relations complexes entre les variables.
+### 📦 Librairies R nécessaires
 
-## Conclusion
-
-Les résultats de notre étude ont montré que des facteurs tels que le niveau d'éducation de la mère, la région, ainsi que les conditions sanitaires, environnementales et géographiques sont significativement liés à l'anémie chez les enfants ghanéens. 
+```r
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(haven)
+library(FactoMineR)
+library(factoextra)
+library(labelled)
+library(openxlsx)
+library(gmodels)
+library(ade4)
+```

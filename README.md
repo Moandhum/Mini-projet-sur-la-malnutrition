@@ -4,7 +4,8 @@ L’anémie touche près de 43 % des enfants dans le monde et jusqu’à 68 % en
 
 ## 📊 Données
 
-Les données proviennent de l’Enquête Démographique et de Santé du Ghana (2019), incluant des mesures d’hémoglobine et des informations sur l’environnement, la nutrition, l’éducation des mères, et l’exposition au paludisme. 
+Les données proviennent de l’Enquête Démographique et de Santé du Ghana (2014), incluant des mesures d’hémoglobine et des informations sur l’environnement, la nutrition, l’éducation des mères, et l’exposition au paludisme. Le jeu de données peut être téléchargé depuis le site officiel du DHS Program :
+https://dhsprogram.com/Data/.
 
 ## 🧪 Méthodologie
 
@@ -26,7 +27,7 @@ Les facteurs les plus associés à l’anémie sont :
 
 1. Cloner ce dépôt :  
    ```bash
-   git clone https://github.com/ton-utilisateur/ton-depot.git
+   git clone https://github.com/Moandhum/Mini-projet-sur-la-malnutrition.git
    ```
 2. Ouvrir et exécuter le fichier `.Rmd` dans RStudio  
 

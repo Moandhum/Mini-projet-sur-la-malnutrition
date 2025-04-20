@@ -29,7 +29,6 @@ Les facteurs les plus associés à l’anémie sont :
    git clone https://github.com/ton-utilisateur/ton-depot.git
    ```
 2. Ouvrir et exécuter le fichier `.Rmd` dans RStudio  
-3. Exécuter l'analyse en tricotant le document (`Knit`)
 
 ### 📦 Librairies R nécessaires
 
